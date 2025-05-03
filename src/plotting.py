@@ -19,13 +19,14 @@ def _convert_states_to_dataframe(states: list[CombinedState]) -> pd.DataFrame:
 
     times = [rounded_time + i * PERIOD for i in range(9)]
     socs = [0.5, 0.55, 0.6, 0.6, 0.6, 0.65, 0.7, 0.75, 0.8]
+    socs =[s*100 for s in socs]
     car_is_charging = [True, True, False, False, True, True, True, True, False]
     charge_is_override = [True, True, False, False, False, False, False, False, False]
 
     df = pd.DataFrame(
         {
             "Time": times,
-            "State of Charge": socs,
+            "Battery %": socs,
             "Car is Charging": car_is_charging,
             "Charge is Override": charge_is_override,
         }
@@ -39,7 +40,7 @@ def plot_upcoming_charges(
 ) -> Figure:
     """Plot the upcoming charges for the car"""
     df = _convert_states_to_dataframe(states)
-    fig = px.line(df, x="Time", y="State of Charge")
+    fig = px.line(df, x="Time", y="Battery %")
 
     # Add a vertical line at the current time
     fig.add_vline(
