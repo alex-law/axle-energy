@@ -12,8 +12,10 @@ def get_demo_state() -> DemoAdminState:
         st.subheader("Demo Admin Controls")
         st.write("Use these controls to simulate the car and charger state.")
 
+        # This is used to create the select time drop down
         current_time = st.time_input("Current Time", rounded_time)
-        # Add back in the date to the time
+        # When creating st current time, hour and minute aren't automatically
+        # included, so need to add back in from datetime object here
         current_time = rounded_time.replace(
             hour=current_time.hour, minute=current_time.minute
         )
@@ -37,6 +39,8 @@ def controls(car_is_plugged_in: bool, car_is_charging: bool, charge_is_override:
 
 
 if __name__ == "__main__":
+    # Demo state defined by us for testing and includes car plugged in information
+    # and current time
     demo_state = get_demo_state()
     car_state = backend.get_car_state(demo_state)
     st.subheader("Charging Schedule")
