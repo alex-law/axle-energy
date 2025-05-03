@@ -5,8 +5,7 @@ from models import DemoAdminState, BatteryState, ChargerState
 from plotting import plot_upcoming_charges
 from utils import ( 
     get_current_time_to_nearest_30_minutes,
-    battery_indicator,
-    get_scheduled_override
+    battery_indicator
 )
 
 
@@ -42,62 +41,6 @@ def get_demo_state() -> DemoAdminState:
     )
 
 
-def controls(car_is_plugged_in: bool):
-
-    # TODO want to move this to backend scripts
-
-    car_is_charging, charge_is_override = get_scheduled_override()
-
-    st.subheader("Controls")
-    c1, c2 = st.columns([1, 1])
-
-    # Not plugged in scenario
-
-    # TODO add in something to say need to plug in first
-
-    if not car_is_plugged_in:
-        scheduled_text = "Start scheduled Charging"
-        override_text = "Start override"
-        return (
-            c1.button(scheduled_text, disabled=True, on_click=backend.handle_scheduled_charge),
-            c2.button(override_text, disabled=True, on_click=backend.handle_override_charge),
-        )
-    
-    # Plugged in scenarios
-    else:
-
-        # No schedule, No override scenario (D from notes)
-        if not car_is_charging and not charge_is_override:
-            scheduled_text = "Start scheduled Charging"
-            override_text = "Start override"
-            return (
-                c1.button(scheduled_text, disabled=False, on_click=backend.handle_scheduled_charge),
-                c2.button(override_text, disabled=True, on_click=backend.handle_override_charge),
-            )
-
-        # Yes schedule, No override scenario (B from notes) 
-        elif car_is_charging and not charge_is_override:
-            scheduled_text = "Stop scheduled Charging for specific time: "
-            override_text = "Start override up to %: "
-            return (
-                c1.button(scheduled_text, disabled=False, on_click=backend.handle_scheduled_charge),
-                c2.button(override_text, disabled=False, on_click=backend.handle_override_charge),
-            )
-
-        # Yes schedule, Yes override scenario (A from notes)
-        elif car_is_charging and charge_is_override:
-            scheduled_text = "Stop scheduled Charging"
-            override_text = "Stop override"
-            return (
-                c1.button(scheduled_text, disabled=True, on_click=backend.handle_scheduled_charge),
-                c2.button(override_text, disabled=False, on_click=backend.handle_override_charge),
-            )
-
-        # No schedule, Yes override scenario (C from notes) 
-        else:
-            raise Exception(f"Schedule: {car_is_charging}, Override: {charge_is_override}.\nThis scenario should not be possible")    
-
-
 if __name__ == "__main__":
     # Not setting demo_state to be a session state since should only be changed during initial set up
     if 'initial_load' not in st.session_state:
@@ -124,4 +67,4 @@ if __name__ == "__main__":
             current_time=demo_state.current_time,
         )
     )
-    start_charging, stop_charging = controls(demo_state.car_is_plugged_in)
+    start_charging, stop_charging = backend.button_control(demo_state.car_is_plugged_in)
