@@ -12,8 +12,8 @@ def get_current_time_to_nearest_30_minutes():
 
 def get_scheduled_override() -> tuple[bool, bool]:
     """Get car_is_charging and charge_is_override variables from st session_state"""
-    car_is_charging = st.session_state['car_state'].car_is_charging
-    charge_is_override = st.session_state['car_state'].charge_is_override
+    car_is_charging = st.session_state['charger_state'].car_is_charging
+    charge_is_override = st.session_state['charger_state'].charge_is_override
     return car_is_charging, charge_is_override
 
 
@@ -24,7 +24,7 @@ def battery_indicator(battery_state: BatteryState):
     
     percentage = int(battery_state.soc*100)
     color = "#4CAF50" if percentage > 50 else "#FFC107" if percentage > 20 else "#F44336"
-    charge_status = "Charging" if st.session_state['car_state'].car_is_charging else ""
+    charge_status = "Charging" if st.session_state['charger_state'].car_is_charging else ""
 
     # TODO add in bit for override
 

@@ -34,10 +34,13 @@ def get_demo_state() -> DemoAdminState:
 
         car_is_plugged_in = st.toggle("Plugged in", value=True)
 
+    # Hardcoding charge rate as 0.1 soc / 1hr
+    charge_rate = 0.1
+
     return DemoAdminState(
         car_is_plugged_in=car_is_plugged_in,
         current_time=current_time,
-        battery_state=BatteryState(soc=soc)
+        battery_state=BatteryState(soc=soc, charge_rate=charge_rate)
     )
 
 
@@ -47,12 +50,12 @@ if __name__ == "__main__":
         st.session_state['initial_load'] = True
         demo_state = get_demo_state()
         # Charging states need to start off with a value so just set both to false here
-        st.session_state['car_state'] = ChargerState(car_is_charging=False, charge_is_override=False)
+        st.session_state['charger_state'] = ChargerState(car_is_charging=False, charge_is_override=False)
     else:
         demo_state = get_demo_state()
         # If demo mode has been reset to have car not plugged in then reset charging and override to false
         if not demo_state.car_is_plugged_in:
-            st.session_state['car_state'] = ChargerState(car_is_charging=False, charge_is_override=False)
+            st.session_state['charger_state'] = ChargerState(car_is_charging=False, charge_is_override=False)
         st.session_state['initial_load'] = False
     # Display battery percentage
     battery_placeholder = st.empty()

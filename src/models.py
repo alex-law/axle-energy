@@ -7,11 +7,12 @@ class BatteryState:
     """The state of the battery"""
     # Setting up seperate dataclass for this since in actual prod code
     # base likely to have a lot more variables associated with it other 
-    # than just soc
+    # than just soc and charge rate
 
     # Keeping battery storage ratio as soc in backend since
     # seems compatible with what you guys use
     soc: float
+    charge_rate: float
 
 @dataclass
 class DemoAdminState:

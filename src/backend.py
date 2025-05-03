@@ -13,15 +13,15 @@ def get_future_states() -> list[CombinedState]:
     return []
 
 
-def get_car_state(demo_state: DemoAdminState) -> ChargerState:
+def get_charger_state(demo_state: DemoAdminState) -> ChargerState:
     # TODO: replace this with your logic. Feel free to rewrite to combine with the function above if necessary.
     # When you're done, we shouldn't have these toggles in the frontend; they should be determined by the backend.
     with st.sidebar:
         car_is_charging = st.toggle(
-            "Currently Charging", value=True, disabled=not demo_state.car_is_plugged_in
+            "Currently charging", value=True, disabled=not demo_state.car_is_plugged_in
         )
         charge_is_override = st.toggle(
-            "Charging is Override", value=True, disabled=not demo_state.car_is_plugged_in
+            "charging is Override", value=True, disabled=not demo_state.car_is_plugged_in
         )
 
     return ChargerState(
@@ -37,8 +37,8 @@ def button_control(car_is_plugged_in: bool) -> None:
 
     # Not plugged in scenario
     if not car_is_plugged_in:
-        scheduled_text = "Start scheduled Charging"
-        override_text = "Start override"
+        scheduled_text = "Plug in to start scheduled charging"
+        override_text = "Plug in to start override"
         return (
             c1.button(scheduled_text, disabled=True, on_click=handle_scheduled_charge),
             c2.button(override_text, disabled=True, on_click=handle_override_charge),
@@ -49,7 +49,7 @@ def button_control(car_is_plugged_in: bool) -> None:
 
         # No schedule, No override scenario (D from notes)
         if not car_is_charging and not charge_is_override:
-            scheduled_text = "Start scheduled Charging"
+            scheduled_text = "Start scheduled charging"
             override_text = "Start override"
             return (
                 c1.button(scheduled_text, disabled=False, on_click=handle_scheduled_charge),
@@ -58,7 +58,7 @@ def button_control(car_is_plugged_in: bool) -> None:
 
         # Yes schedule, No override scenario (B from notes) 
         elif car_is_charging and not charge_is_override:
-            scheduled_text = "Stop scheduled Charging for specific time: "
+            scheduled_text = "Stop scheduled charging for specific time: "
             override_text = "Start override up to %: "
             return (
                 c1.button(scheduled_text, disabled=False, on_click=handle_scheduled_charge),
@@ -67,7 +67,7 @@ def button_control(car_is_plugged_in: bool) -> None:
 
         # Yes schedule, Yes override scenario (A from notes)
         elif car_is_charging and charge_is_override:
-            scheduled_text = "Stop scheduled Charging"
+            scheduled_text = "Stop scheduled charging"
             override_text = "Stop override"
             return (
                 c1.button(scheduled_text, disabled=True, on_click=handle_scheduled_charge),
@@ -81,13 +81,13 @@ def button_control(car_is_plugged_in: bool) -> None:
 
 def handle_scheduled_charge() -> None:
     # TODO add docstring
-    # Should only affect car_is_charging from car_state
+    # Should only affect car_is_charging from charger_state
     car_is_charging, charge_is_override = get_scheduled_override()
     if car_is_charging and not charge_is_override:
-        st.session_state['car_state'].car_is_charging = False
+        st.session_state['charger_state'].car_is_charging = False
         st.toast("Stoping scheduled charge", icon="⚠️")
     elif not car_is_charging and not charge_is_override:
-        st.session_state['car_state'].car_is_charging = True
+        st.session_state['charger_state'].car_is_charging = True
         st.toast("Starting scheduled charge", icon="🚀")
     # No other combinations should make it this far
     else:
@@ -95,13 +95,13 @@ def handle_scheduled_charge() -> None:
 
 def handle_override_charge() -> None:
     # TODO add docstring
-    # Should only affect charge_is_override from car_state
+    # Should only affect charge_is_override from charger_state
     car_is_charging, charge_is_override = get_scheduled_override()
     if car_is_charging and charge_is_override:
-        st.session_state['car_state'].charge_is_override = False
+        st.session_state['charger_state'].charge_is_override = False
         st.toast("Stopping override", icon="🛑")
     elif car_is_charging and not charge_is_override:
-        st.session_state['car_state'].charge_is_override = True
+        st.session_state['charger_state'].charge_is_override = True
         st.toast("Starting override", icon="🔥")
     # No other combinations should make it this far
     else:
