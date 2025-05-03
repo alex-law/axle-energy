@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<style type="text/css">
+
+body {
+	margin: 0;
+	font: 15px Arial, sans-serif;
+}
+
+#demo-container {
+	text-align: center;
+	margin: 40px auto;
+}
+
+#file-input-label {
+	width: 400px;
+	cursor: pointer;
+	background-color: #336699;
+	color: white;
+	padding: 10px;
+	display: block;
+	margin: 0 auto;
+}
+
+#file-input {
+	display: none;
+}
+
+#file-progress-container {
+	display: none;
+	margin: 15px 0 0 0;
+}
+
+#contents {
+	margin: 15px 0 0 0;
+	display: none;
+	text-align: left;
+	background-color: rgba(0,0,0,0.1);
+	padding: 10px;
+	font-size: 13px;
+	max-height: 10000px;
+	overflow: auto;
+}
+
+</style>
+</head>
+
+<body>
+
+<p>Web app to reformat json files<p>
+<hr>
+<a href="index.html">Home</a>
+
+<div id="demo-container">
+	<label for="file-input" id="file-input-label">Click to upload json file</label>
+	<input type="file" id="file-input" />
+	<div id="file-progress-container"><span id="file-progress-percent"></span>% read</div>
+	<pre id="contents"></pre>
+</div>
+
+<script type="text/javascript">
+
+document.querySelector("#file-input").addEventListener('change', function() {
+	// files that user has chosen
+	var all_files = this.files;
+	if(all_files.length == 0) {
+		alert('Error : No file selected');
+		return;
+	}
+
+	// first file selected by user
+	var file = all_files[0];
+
+	// file validation is successfull
+	// we will now read the file
+	var reader = new FileReader();
+
+	// file reading started
+	reader.addEventListener('loadstart', function() {
+	    document.querySelector("#file-input-label").style.display = 'none'; 
+	});
+
+	// file reading finished successfully
+	reader.addEventListener('load', function(e) {
+	    var text = e.target.result;
+		var json_in = JSON.parse(text)
+			
+		var i = 0
+		var json_out = {}
+		json_out = Object.assign({'Cyber': []}, json_out);
+		json_out = Object.assign({'Social Media': []}, json_out);
+		json_out = Object.assign({'Person': []}, json_out);
+		json_out = Object.assign({'Communication': []}, json_out);
+		
+		for ( var i = 0; i < json_in.plugins.length; i++) {
+			var obj = json_in.plugins[i];
+			if (obj.category == "Cyber") {
+				json_out['Cyber'].push(obj);
+			} else if (obj.category == 'Social Media') {
+				json_out['Social Media'].push(obj);
+			} else if (obj.category == 'Person') {
+				json_out['Person'].push(obj);
+			} else if (obj.category == 'Communication') {
+				json_out['Communication'].push(obj);
+			}
+		}
+	
+		var text_out = JSON.stringify(json_out, null, 4)
+		
+	    // contents of the file
+	    document.querySelector("#contents").innerHTML = text_out;
+	    document.querySelector("#contents").style.display = 'block';
+
+	    document.querySelector("#file-input-label").style.display = 'block'; 
+	});
+
+	// file reading failed
+	reader.addEventListener('error', function() {
+	    alert('Error : Failed to read file');
+	});
+
+	// read as text file
+	reader.readAsText(file);
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,172 @@
+{
+	"plugins": [{
+			"category": "Cyber",
+			"plugin_name": "Network",
+			"enabled": "true",
+			"plugin_class": "NetworkPlugin",
+			"actions": [{
+				"action": "getIPs",
+				"pretty_name": "Get Ips",
+				"description": "Gets Ip Addresses from hostname",
+				"accepts_properties": [
+					"url",
+					"hostname",
+					"web host"
+				],
+				"accepts_entities": [
+					"Web Site",
+					"Web Page",
+					"Computer"
+				],
+				"returns_entities": [
+					"IP_Address"
+				]
+			}]
+		},
+		{
+			"category": "Social Media",
+			"plugin_name": "Twitter",
+			"enabled": "true",
+			"plugin_class": "TwitterPlugin",
+			"actions": [{
+				"action": "getTwitterFollowers",
+				"pretty_name": "Get Twitter Followers",
+				"description": "Find related Twitter accounts",
+				"accepts_properties": [
+					"Social Media User"
+				],
+				"accepts_entities": [
+					"Account",
+					"Social Media User"
+				],
+				"returns_entities": [
+					"Account",
+					"Social Media User"
+				]
+			}]
+		},
+		{
+			"category": "Person",
+			"plugin_name": "Pipl",
+			"enabled": "true",
+			"plugin_class": "PiplPlugin",
+			"actions": [{
+					"action": "getPiplContact",
+					"pretty_name": "Pipl Contact Info",
+					"description": "Get Contact information from Pipl",
+					"accepts_properties": [
+						"Person"
+					],
+					"accepts_entities": [
+						"Person",
+						"Anonymous",
+						"Email",
+						"Account",
+						"Social Media User",
+						"Telephone"
+					],
+					"returns_entities": [
+						"Email",
+						"Organization",
+						"Web Page",
+						"Person",
+						"Picture",
+						"Telephone"
+					]
+				},
+				{
+					"action": "getPiplFull",
+					"pretty_name": "Pipl Full Search",
+					"description": "Get all info and connections from Pipl",
+					"accepts_properties": [
+						"Person"
+					],
+					"accepts_entities": [
+						"Person",
+						"Account",
+						"Anonymous",
+						"Social Media User",
+						"Telephone",
+						"Email"
+					],
+					"returns_entities": [
+						"Email",
+						"Organization",
+						"Web Page",
+						"Person",
+						"Picture",
+						"Telephone"
+					]
+				},
+				{
+					"action": "getPiplSocial",
+					"pretty_name": "Pipl Social Search",
+					"description": "Get Social Connections from Pipl",
+					"accepts_properties": [
+						"Person"
+					],
+					"accepts_entities": [
+						"Anonymous",
+						"Person",
+						"Email",
+						"Account",
+						"Social Media User",
+						"Telephone"
+					],
+					"returns_entities": [
+						"Email",
+						"Organization",
+						"Web Page",
+						"Person",
+						"Picture",
+						"Telephone"
+					]
+				}
+			]
+		},
+		{
+			"category": "Communication",
+			"plugin_name": "PhoneServiceProvider",
+			"enabled": "true",
+			"plugin_class": "ServicePlugin",
+			"actions": [{
+				"action": "getServiceProvider",
+				"pretty_name": "Get Service Provider",
+				"description": "Get Service Provider for Phone",
+				"accepts_properties": [
+					"Telephone"
+				],
+				"accepts_entities": [
+					"Telephone"
+				],
+				"returns_entities": [
+					"Organization"
+				]
+			}]
+		},
+		{
+			"category": "Social Media",
+			"plugin_name": "ChorusSocial",
+			"enabled": "true",
+			"plugin_class": "ChorusSocial",
+			"actions": [{
+				"action": "getOtherSocialMediaAccounts",
+				"pretty_name": "Get Social Media Accounts",
+				"description": "Find other Social Media accounts",
+				"accepts_properties": [
+					"Account",
+					"hostname",
+					"web host"
+				],
+				"accepts_entities": [
+					"Account",
+					"Social Media User"
+				],
+				"returns_entities": [
+					"Account",
+					"Social Media User"
+				]
+			}]
+		}
+	]
+}
