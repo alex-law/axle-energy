@@ -1,9 +1,9 @@
 import streamlit as st
 
 import backend
-from models import DemoAdminState
+from models import DemoAdminState, BatteryState
 from plotting import plot_upcoming_charges
-from utils import get_current_time_to_nearest_30_minutes
+from utils import get_current_time_to_nearest_30_minutes, battery_indicator
 
 
 def get_demo_state() -> DemoAdminState:
@@ -11,6 +11,15 @@ def get_demo_state() -> DemoAdminState:
     with st.sidebar:
         st.subheader("Demo Admin Controls")
         st.write("Use these controls to simulate the car and charger state.")
+
+        percentage_input = st.number_input(
+            "Battery %",
+            min_value=0,
+            max_value=100,
+            step=1,
+            help="Enter Battery %"
+        )
+        soc = percentage_input / 100.0
 
         # This is used to create the select time drop down
         current_time = st.time_input("Current Time", rounded_time)
@@ -23,7 +32,9 @@ def get_demo_state() -> DemoAdminState:
         car_is_plugged_in = st.toggle("Plugged in", value=True)
 
     return DemoAdminState(
-        car_is_plugged_in=car_is_plugged_in, current_time=current_time
+        car_is_plugged_in=car_is_plugged_in,
+        current_time=current_time,
+        battery_state=BatteryState(soc=soc)
     )
 
 
@@ -43,7 +54,13 @@ if __name__ == "__main__":
     # and current time
     demo_state = get_demo_state()
     car_state = backend.get_car_state(demo_state)
+    # Display battery percentage
+    battery_placeholder = st.empty()
+    battery_html = battery_indicator(demo_state.battery_state, car_state)
+    battery_placeholder.markdown(battery_html, unsafe_allow_html=True)
+
     st.subheader("Charging Schedule")
+
     st.plotly_chart(
         plot_upcoming_charges(
             backend.get_future_states(),
