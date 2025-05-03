@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
-from models import BatteryState, ChargerState
+import streamlit as st
+
+from models import BatteryState
 
 def get_current_time_to_nearest_30_minutes():
     """Return the current time, rounded to the nearest 30 minutes"""
@@ -8,14 +10,21 @@ def get_current_time_to_nearest_30_minutes():
     return now.replace(minute=0, second=0, microsecond=0) + timedelta(minutes=minutes)
 
 
-def battery_indicator(battery_state: BatteryState, car_state: ChargerState):
+def get_scheduled_override() -> tuple[bool, bool]:
+    """Get car_is_charging and charge_is_override variables from st session_state"""
+    car_is_charging = st.session_state['car_state'].car_is_charging
+    charge_is_override = st.session_state['car_state'].charge_is_override
+    return car_is_charging, charge_is_override
+
+
+def battery_indicator(battery_state: BatteryState):
     """Generates HTML for a battery indicator with a percentage bar."""
     # Could use something like psutil to get live indication of battery level
     # but feel that is too complicated for this demo
     
     percentage = int(battery_state.soc*100)
     color = "#4CAF50" if percentage > 50 else "#FFC107" if percentage > 20 else "#F44336"
-    charge_status = "Charging" if car_state.car_is_charging else ""
+    charge_status = "Charging" if st.session_state['car_state'].car_is_charging else ""
 
     # TODO add in bit for override
 

@@ -4,6 +4,7 @@
 import streamlit as st
 
 from models import ChargerState, DemoAdminState, CombinedState
+from utils import get_scheduled_override
 
 
 def get_future_states() -> list[CombinedState]:
@@ -28,11 +29,30 @@ def get_car_state(demo_state: DemoAdminState) -> ChargerState:
     )
 
 
-def handle_start_charge():
-    # TODO: handle when the user presses the "Start Charge" button
-    st.toast("Starting charge!", icon="🚀")
+def handle_scheduled_charge():
+    # TODO add docstring
+    # Should only affect car_is_charging from car_state
+    car_is_charging, charge_is_override = get_scheduled_override()
+    if car_is_charging and not charge_is_override:
+        st.session_state['car_state'].car_is_charging = False
+        st.toast("Stoping scheduled charge", icon="⚠️")
+    elif not car_is_charging and not charge_is_override:
+        st.session_state['car_state'].car_is_charging = True
+        st.toast("Starting scheduled charge", icon="🚀")
+    # No other combinations should make it this far
+    else:
+        raise Exception('Invalid scheduled override combo')
 
-
-def handle_stop_charge():
-    # TODO: handle when the user presses the "Stop Charge" button
-    st.toast("Stopping charge", icon="⚠️")
+def handle_override_charge():
+    # TODO add docstring
+    # Should only affect charge_is_override from car_state
+    car_is_charging, charge_is_override = get_scheduled_override()
+    if car_is_charging and charge_is_override:
+        st.session_state['car_state'].charge_is_override = False
+        st.toast("Stopping override", icon="🛑")
+    elif car_is_charging and not charge_is_override:
+        st.session_state['car_state'].charge_is_override = True
+        st.toast("Starting override", icon="🔥")
+    # No other combinations should make it this far
+    else:
+        raise Exception('Invalid scheduled override combo')
