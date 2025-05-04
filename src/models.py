@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, time
 
 
 @dataclass
@@ -19,6 +19,8 @@ class DemoAdminState:
     """State we control from the admin panel to control the demo"""
 
     car_is_plugged_in: bool
+    low_price_start: time
+    low_price_end: time
     current_time: datetime
     battery_state: BatteryState
 

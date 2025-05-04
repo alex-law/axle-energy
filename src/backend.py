@@ -5,7 +5,7 @@ import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta, time
 
-from models import  CombinedState, BatteryState
+from models import  CombinedState, BatteryState, DemoAdminState
 from config import PERIOD, RANGE_STEPS
 from utils import (
     get_scheduled_override,
@@ -23,13 +23,18 @@ def get_scheduled_times():
     return schedule_start_time, schedule_end_time
 
 
-def get_future_states(battery_state: BatteryState, current_time: datetime.time) -> pd.DataFrame:
+def get_future_states(demo_state: DemoAdminState) -> pd.DataFrame:
     """Return a list of future states for the system. This is used for plotting the charge trajectory."""
-    soc = battery_state.soc
+    # Set to new variable to prevent demo state changing during graph plot
+    soc = demo_state.battery_state.soc
+    current_time = demo_state.current_time
     car_is_charging, charge_is_override = get_scheduled_override()
     desired_soc = st.session_state['charger_state'].desired_soc
 
-    schedule_start_time, schedule_end_time = get_scheduled_times()
+    # schedule_start_time, schedule_end_time = get_scheduled_times()
+
+    schedule_start_time = demo_state.low_price_start
+    schedule_end_time = demo_state.low_price_end
 
     # TODO refactor to move charging override logic into seperate functions, add to notes
     # TODO maybe allow scheduled time to be set in demo admin controls
@@ -63,7 +68,7 @@ def get_future_states(battery_state: BatteryState, current_time: datetime.time) 
             }
             current_time = add_period_to_rounded_time(current_time, PERIOD)
             if charging:
-                soc += battery_state.charge_rate
+                soc += demo_state.battery_state.charge_rate
                 soc = min(1, soc, desired_soc)
             dicts_for_df.append(data_dict)
 
@@ -83,7 +88,7 @@ def get_future_states(battery_state: BatteryState, current_time: datetime.time) 
             }
             current_time = add_period_to_rounded_time(current_time, PERIOD)
             if charging:
-                soc += battery_state.charge_rate
+                soc += demo_state.battery_state.charge_rate
                 soc = min(1, soc)
             dicts_for_df.append(data_dict)
 

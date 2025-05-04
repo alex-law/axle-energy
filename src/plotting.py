@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import time, timedelta
 
 import pandas as pd
 import plotly.express as px
@@ -11,7 +11,7 @@ from utils import (
 )
 
 
-def plot_upcoming_charges(df: pd.DataFrame, current_time: datetime) -> Figure:
+def plot_upcoming_charges(df: pd.DataFrame, current_time: time) -> Figure:
     """Plot the upcoming charges for the car"""
     fig = px.line(df, x="Time", y="Battery %")
 

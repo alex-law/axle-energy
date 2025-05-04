@@ -1,12 +1,15 @@
 import streamlit as st
+from datetime import timedelta
 
 import backend
+from config import LOW_PRICE_START_TIME, LOW_PRICE_END_TIME
 from models import DemoAdminState, BatteryState, ChargerState
 from plotting import plot_upcoming_charges
 from utils import ( 
     get_current_time_to_nearest_30_minutes,
     battery_indicator,
-    get_scheduled_override
+    get_scheduled_override,
+    add_period_to_rounded_time
 )
 
 
@@ -29,9 +32,19 @@ def get_demo_state() -> DemoAdminState:
         current_time = st.time_input("Current Time", rounded_time)
         # When creating st current time, hour and minute aren't automatically
         # included, so need to add back in from datetime object here
-        current_time = rounded_time.replace(
-            hour=current_time.hour, minute=current_time.minute
-        )
+        # current_time = rounded_time.replace(
+        #     hour=current_time.hour, minute=current_time.minute
+        # )
+
+        if 'low_price_start_limit' in st.session_state:
+            low_price_start_limit = st.session_state['low_price_start_limit']
+        else:
+            low_price_start_limit = LOW_PRICE_START_TIME
+
+        low_price_start = st.time_input('Low Price Start Time', low_price_start_limit)
+        low_price_end_limit = add_period_to_rounded_time(low_price_start, timedelta(hours=3))
+        low_price_end = st.time_input('Low Price End Time', low_price_end_limit)
+        st.session_state['low_price_start_limit'] = add_period_to_rounded_time(low_price_end_limit, timedelta(hours=21))
 
         car_is_plugged_in = st.toggle("Plugged in", value=True)
 
@@ -40,6 +53,8 @@ def get_demo_state() -> DemoAdminState:
 
     return DemoAdminState(
         car_is_plugged_in=car_is_plugged_in,
+        low_price_start=low_price_start,
+        low_price_end=low_price_end,
         current_time=current_time,
         battery_state=BatteryState(soc=soc, charge_rate=charge_rate)
     )
@@ -65,7 +80,7 @@ if __name__ == "__main__":
 
     st.subheader("Charging Schedule")
 
-    df_plot = backend.get_future_states(demo_state.battery_state, demo_state.current_time)
+    df_plot = backend.get_future_states(demo_state)
 
     st.plotly_chart(
         plot_upcoming_charges(
