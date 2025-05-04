@@ -27,15 +27,9 @@ def get_scheduled_override() -> tuple[bool, bool]:
 
 def battery_indicator(battery_state: BatteryState):
     """Generates HTML for a battery indicator with a percentage bar."""
-    # Could use something like psutil to get live indication of battery level
-    # but feel that is too complicated for this demo
-    
     percentage = int(battery_state.soc*100)
     color = "#4CAF50" if percentage > 50 else "#FFC107" if percentage > 20 else "#F44336"
     charge_status = "Charging" if st.session_state['charger_state'].car_is_charging else ""
-
-    # TODO add in bit for override
-
     html = f"""
     <div style="
         background-color: #f0f2f6;

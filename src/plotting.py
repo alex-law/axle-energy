@@ -1,14 +1,10 @@
-from datetime import time, timedelta
-
+from datetime import time
 import pandas as pd
 import plotly.express as px
 from plotly.graph_objs import Figure
 
-from models import CombinedState
 from config import PERIOD
-from utils import (
-    add_period_to_rounded_time
-)
+from utils import add_period_to_rounded_time
 
 
 def plot_upcoming_charges(df: pd.DataFrame, current_time: time) -> Figure:
