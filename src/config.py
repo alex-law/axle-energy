@@ -8,5 +8,5 @@ RANGE_STEPS = 9
 LOW_PRICE_START_TIME = time(2, 0)
 # How long should default low price be
 LOW_PRICE_DURATION = 3
-# How fast does the battery charge 0.1 soc / 1hr
+# How fast does the battery charge 1 soc / PERIOD
 CHARGE_RATE = 0.1
