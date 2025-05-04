@@ -28,6 +28,7 @@ class ChargerState:
 
     car_is_charging: bool
     charge_is_override: bool
+    desired_soc: float
 
 
 @dataclass

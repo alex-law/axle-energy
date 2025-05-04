@@ -5,7 +5,8 @@ from models import DemoAdminState, BatteryState, ChargerState
 from plotting import plot_upcoming_charges
 from utils import ( 
     get_current_time_to_nearest_30_minutes,
-    battery_indicator
+    battery_indicator,
+    get_scheduled_override
 )
 
 
@@ -50,12 +51,12 @@ if __name__ == "__main__":
         st.session_state['initial_load'] = True
         demo_state = get_demo_state()
         # Charging states need to start off with a value so just set both to false here
-        st.session_state['charger_state'] = ChargerState(car_is_charging=False, charge_is_override=False)
+        st.session_state['charger_state'] = ChargerState(car_is_charging=False, charge_is_override=False, desired_soc=1.0)
     else:
         demo_state = get_demo_state()
         # If demo mode has been reset to have car not plugged in then reset charging and override to false
         if not demo_state.car_is_plugged_in:
-            st.session_state['charger_state'] = ChargerState(car_is_charging=False, charge_is_override=False)
+            st.session_state['charger_state'] = ChargerState(car_is_charging=False, charge_is_override=False, desired_soc=1.0)
         st.session_state['initial_load'] = False
     # Display battery percentage
     battery_placeholder = st.empty()
@@ -64,10 +65,19 @@ if __name__ == "__main__":
 
     st.subheader("Charging Schedule")
 
+    df_plot = backend.get_future_states(demo_state.battery_state, demo_state.current_time)
+
     st.plotly_chart(
         plot_upcoming_charges(
-            backend.get_future_states(),
+            df_plot,
             current_time=demo_state.current_time,
         )
     )
-    start_charging, stop_charging = backend.button_control(demo_state.car_is_plugged_in)
+
+    car_is_charging, charge_is_override = get_scheduled_override()
+
+
+    backend.button_control(
+        demo_state.car_is_plugged_in,
+        demo_state.battery_state.soc
+    )

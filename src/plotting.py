@@ -5,41 +5,19 @@ import plotly.express as px
 from plotly.graph_objs import Figure
 
 from models import CombinedState
-from utils import get_current_time_to_nearest_30_minutes
+from utils import (
+    get_current_time_to_nearest_30_minutes,
+    get_scheduled_override,
+    add_period_to_rounded_time
+)
 
 # These set the resampling period for graphing
 PERIOD = timedelta(minutes=30)
 PERIOD_STR = "30min"
 
 
-def _convert_states_to_dataframe(states: list[CombinedState]) -> pd.DataFrame:
-    """Convert to dataframe for ease of plotting with Plotly, and resample to 30mins"""
-    # TODO: Replace this with your logic - it should take the list of CombinedState objects and return a DataFrame
-    rounded_time = get_current_time_to_nearest_30_minutes()
-
-    times = [rounded_time + i * PERIOD for i in range(9)]
-    socs = [0.5, 0.55, 0.6, 0.6, 0.6, 0.65, 0.7, 0.75, 0.8]
-    socs =[s*100 for s in socs]
-    car_is_charging = [True, True, False, False, True, True, True, True, False]
-    charge_is_override = [True, True, False, False, False, False, False, False, False]
-
-    df = pd.DataFrame(
-        {
-            "Time": times,
-            "Battery %": socs,
-            "Car is Charging": car_is_charging,
-            "Charge is Override": charge_is_override,
-        }
-    )
-
-    return df.reset_index()
-
-
-def plot_upcoming_charges(
-    states: list[CombinedState], current_time: datetime
-) -> Figure:
+def plot_upcoming_charges(df: pd.DataFrame, current_time: datetime) -> Figure:
     """Plot the upcoming charges for the car"""
-    df = _convert_states_to_dataframe(states)
     fig = px.line(df, x="Time", y="Battery %")
 
     # Add a vertical line at the current time
@@ -56,7 +34,7 @@ def plot_upcoming_charges(
             continue
         fig.add_vrect(
             x0=row["Time"],
-            x1=row["Time"] + PERIOD,
+            x1 = add_period_to_rounded_time(row["Time"], PERIOD),
             fillcolor="red" if row["Charge is Override"] else "green",
             opacity=0.1,
             layer="below",

@@ -3,11 +3,18 @@ import streamlit as st
 
 from models import BatteryState
 
-def get_current_time_to_nearest_30_minutes():
+def get_current_time_to_nearest_30_minutes(current_time: datetime.time):
     """Return the current time, rounded to the nearest 30 minutes"""
-    now = datetime.now()
-    minutes = 30 * round(now.minute / 30)
-    return now.replace(minute=0, second=0, microsecond=0) + timedelta(minutes=minutes)
+    minutes = 30 * round(current_time.minute / 30)
+    rounded_date = current_time.replace(minute=0, second=0, microsecond=0) + timedelta(minutes=minutes)
+    return rounded_date.time()
+
+
+def add_period_to_rounded_time(rounded_time, period):
+    dummy_date = datetime.now().date()
+    start_datetime = datetime.combine(dummy_date, rounded_time)
+    end_datetime = start_datetime + period
+    return end_datetime.time()
 
 
 def get_scheduled_override() -> tuple[bool, bool]:
