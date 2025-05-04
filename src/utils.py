@@ -1,9 +1,10 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 import streamlit as st
 
 from models import BatteryState
 
-def get_current_time_to_nearest_30_minutes():
+
+def get_current_time_to_nearest_30_minutes() -> time:
     """Return the current time, rounded to the nearest 30 minutes"""
     datetime_now = datetime.now()
     minutes = 30 * round(datetime_now.minute / 30)
@@ -11,7 +12,7 @@ def get_current_time_to_nearest_30_minutes():
     return datetime_now.time()
 
 
-def add_period_to_rounded_time(rounded_time, period):
+def add_period_to_rounded_time(rounded_time, period) -> time:
     dummy_date = datetime.now().date()
     start_datetime = datetime.combine(dummy_date, rounded_time)
     end_datetime = start_datetime + period
@@ -25,7 +26,7 @@ def get_scheduled_override() -> tuple[bool, bool]:
     return car_is_charging, charge_is_override
 
 
-def battery_indicator(battery_state: BatteryState):
+def battery_indicator(battery_state: BatteryState) -> str:
     """Generates HTML for a battery indicator with a percentage bar."""
     percentage = int(battery_state.soc*100)
     color = "#4CAF50" if percentage > 50 else "#FFC107" if percentage > 20 else "#F44336"
