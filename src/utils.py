@@ -3,11 +3,12 @@ import streamlit as st
 
 from models import BatteryState
 
-def get_current_time_to_nearest_30_minutes(current_time: datetime.time):
+def get_current_time_to_nearest_30_minutes():
     """Return the current time, rounded to the nearest 30 minutes"""
-    minutes = 30 * round(current_time.minute / 30)
-    rounded_date = current_time.replace(minute=0, second=0, microsecond=0) + timedelta(minutes=minutes)
-    return rounded_date.time()
+    datetime_now = datetime.now()
+    minutes = 30 * round(datetime_now.minute / 30)
+    datetime_now = datetime_now.replace(minute=0, second=0, microsecond=0) + timedelta(minutes=minutes)
+    return datetime_now.time()
 
 
 def add_period_to_rounded_time(rounded_time, period):

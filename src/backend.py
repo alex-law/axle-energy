@@ -8,7 +8,6 @@ from datetime import datetime, timedelta, time
 from models import  CombinedState, BatteryState
 from utils import (
     get_scheduled_override,
-    get_current_time_to_nearest_30_minutes,
     add_period_to_rounded_time
 )
 
@@ -29,9 +28,7 @@ def get_scheduled_times():
 
 def get_future_states(battery_state: BatteryState, current_time: datetime.time) -> pd.DataFrame:
     """Return a list of future states for the system. This is used for plotting the charge trajectory."""
-    car_is_charging, charge_is_override = get_scheduled_override()
     soc = battery_state.soc
-    rounded_time = get_current_time_to_nearest_30_minutes(current_time)
     car_is_charging, charge_is_override = get_scheduled_override()
     desired_soc = st.session_state['charger_state'].desired_soc
 
@@ -45,7 +42,7 @@ def get_future_states(battery_state: BatteryState, current_time: datetime.time) 
     if charge_is_override:
         for i in range(RANGE_STEPS):
             # If rounded time during scheduled time
-            if schedule_start_time <= rounded_time < schedule_end_time:
+            if schedule_start_time <= current_time < schedule_end_time:
                 override = False
                 if soc <= 1:
                     charging = True
@@ -62,12 +59,12 @@ def get_future_states(battery_state: BatteryState, current_time: datetime.time) 
                     override = False
 
             data_dict = {
-                'Time': rounded_time,
+                'Time': current_time,
                 'Battery %': int(soc*100),
                 'Car is Charging': charging,
                 'Charge is Override': override
             }
-            rounded_time = add_period_to_rounded_time(rounded_time, PERIOD)
+            current_time = add_period_to_rounded_time(current_time, PERIOD)
             if charging:
                 soc += battery_state.charge_rate
                 soc = min(1, soc, desired_soc)
@@ -76,18 +73,18 @@ def get_future_states(battery_state: BatteryState, current_time: datetime.time) 
     elif car_is_charging and not charge_is_override:
         override = False
         for i in range(RANGE_STEPS):
-            if (schedule_start_time <= rounded_time < schedule_end_time) and (soc <= 1):
+            if (schedule_start_time <= current_time < schedule_end_time) and (soc <= 1):
                 charging = True
             else:
                 charging = False
 
             data_dict = {
-                'Time': rounded_time,
+                'Time': current_time,
                 'Battery %': int(soc*100),
                 'Car is Charging': charging,
                 'Charge is Override': override
             }
-            rounded_time = add_period_to_rounded_time(rounded_time, PERIOD)
+            current_time = add_period_to_rounded_time(current_time, PERIOD)
             if charging:
                 soc += battery_state.charge_rate
                 soc = min(1, soc)
@@ -96,12 +93,12 @@ def get_future_states(battery_state: BatteryState, current_time: datetime.time) 
     elif not car_is_charging:
         for i in range(RANGE_STEPS):
             data_dict = {
-                    'Time': rounded_time,
+                    'Time': current_time,
                     'Battery %': int(soc*100),
                     'Car is Charging': False,
                     'Charge is Override': False
                 }
-            rounded_time = add_period_to_rounded_time(rounded_time, PERIOD)
+            current_time = add_period_to_rounded_time(current_time, PERIOD)
             dicts_for_df.append(data_dict)
 
     else:

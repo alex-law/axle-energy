@@ -6,8 +6,6 @@ from plotly.graph_objs import Figure
 
 from models import CombinedState
 from utils import (
-    get_current_time_to_nearest_30_minutes,
-    get_scheduled_override,
     add_period_to_rounded_time
 )
 
