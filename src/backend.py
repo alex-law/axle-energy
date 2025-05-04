@@ -12,10 +12,6 @@ from utils import (
     add_period_to_rounded_time
 )
 
-# TODO link with period data etc in plotting
-PERIOD = timedelta(minutes=30)
-RANGE_STEPS = 20
-
 
 def get_scheduled_times():
     # Going to the extra effort of getting date and time to avoid confusion around midnight
@@ -155,11 +151,18 @@ def button_control(car_is_plugged_in: bool, soc: float):
             st.session_state['charger_state'].desired_soc = desired_percentage_input / 100.0
 
             c1_row2, c2_row2 = st.columns([1, 1])
-            scheduled_text = "Stop scheduled charging for specific time: "
-            override_text = "Start override"
-       
+
+            scheduled_text = "Stop scheduled charging"
             c1_row2.button(scheduled_text, disabled=False, on_click=handle_scheduled_charge)
-            c2_row2.button(override_text, disabled=False, on_click=handle_override_charge)
+            
+            # Don't want to allow user to click charge if desired soc <= current soc
+            if st.session_state['charger_state'].desired_soc <= soc:
+                override_text = "Select % to start override"
+                c2_row2.button(override_text, disabled=True, on_click=handle_override_charge)
+            else:
+                    override_text = "Start override"
+                    c2_row2.button(override_text, disabled=False, on_click=handle_override_charge)
+            
 
         # Yes schedule, Yes override scenario (A from notes)
         elif car_is_charging and charge_is_override:
@@ -196,6 +199,7 @@ def handle_override_charge() -> None:
         st.session_state['charger_state'].charge_is_override = False
         st.toast("Stopping override", icon="🛑")
     elif car_is_charging and not charge_is_override:
+
         st.session_state['charger_state'].charge_is_override = True
         st.toast("Starting override", icon="🔥")
     # No other combinations should make it this far

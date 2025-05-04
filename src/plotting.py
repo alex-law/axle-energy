@@ -5,14 +5,10 @@ import plotly.express as px
 from plotly.graph_objs import Figure
 
 from models import CombinedState
-from config import PERIOD, PERIOD_STR
+from config import PERIOD
 from utils import (
     add_period_to_rounded_time
 )
-
-# These set the resampling period for graphing
-PERIOD = timedelta(minutes=30)
-PERIOD_STR = "30min"
 
 
 def plot_upcoming_charges(df: pd.DataFrame, current_time: datetime) -> Figure:
