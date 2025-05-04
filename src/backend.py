@@ -3,9 +3,9 @@
 
 import pandas as pd
 import streamlit as st
-from datetime import datetime, timedelta, time
+from datetime import time
 
-from models import  CombinedState, BatteryState, DemoAdminState
+from models import  DemoAdminState
 from config import PERIOD, RANGE_STEPS
 from utils import (
     get_scheduled_override,
@@ -13,86 +13,108 @@ from utils import (
 )
 
 
-def get_scheduled_times():
-    # Going to the extra effort of getting date and time to avoid confusion around midnight
-    # today = datetime.now()
-    schedule_start_time = time(2, 0, 0)
-    # schedule_start_date = datetime.combine(today.date(), schedule_start_time)
-    schedule_end_time = time(5, 0, 0)
-    # schedule_end_date = datetime.combine(today.date(), schedule_end_time)
-    return schedule_start_time, schedule_end_time
+def get_override_charge_dicts(
+        soc,
+        current_time,
+        schedule_start_time,
+        schedule_end_time,
+        desired_soc,
+        charge_rate
+    ):
+    dicts_for_df = []
+    for i in range(RANGE_STEPS):
+        # If rounded time during scheduled time
+        if schedule_start_time <= current_time < schedule_end_time:
+            override = False
+            if soc <= 1:
+                charging = True
+            else:
+                charging = False
+            # If not during scheduled time
+        else:
+            # If less than desired soc then overide
+            if soc < desired_soc:
+                charging = True
+                override = True
+            else:
+                charging = False
+                override = False
 
+        data_dict = {
+            'Time': current_time,
+            'Battery %': int(soc*100),
+            'Car is Charging': charging,
+            'Charge is Override': override
+        }
+        current_time = add_period_to_rounded_time(current_time, PERIOD)
+        if charging:
+            soc += charge_rate
+            soc = min(1, soc, desired_soc)
+        dicts_for_df.append(data_dict)
+    return dicts_for_df
+
+def get_standard_charge_dicts(
+        soc,
+        current_time,
+        schedule_start_time,
+        schedule_end_time,
+        charge_rate
+    ):
+    dicts_for_df = []
+    override = False
+    for i in range(RANGE_STEPS):
+        if (schedule_start_time <= current_time < schedule_end_time) and (soc <= 1):
+            charging = True
+        else:
+            charging = False
+
+        data_dict = {
+            'Time': current_time,
+            'Battery %': int(soc*100),
+            'Car is Charging': charging,
+            'Charge is Override': override
+        }
+        current_time = add_period_to_rounded_time(current_time, PERIOD)
+        if charging:
+            soc += charge_rate
+            soc = min(1, soc)
+        dicts_for_df.append(data_dict)
+    return dicts_for_df
 
 def get_future_states(demo_state: DemoAdminState) -> pd.DataFrame:
     """Return a list of future states for the system. This is used for plotting the charge trajectory."""
     # Set to new variable to prevent demo state changing during graph plot
     soc = demo_state.battery_state.soc
     current_time = demo_state.current_time
+    schedule_start_time = demo_state.low_price_start
+    schedule_end_time = demo_state.low_price_end
     car_is_charging, charge_is_override = get_scheduled_override()
     desired_soc = st.session_state['charger_state'].desired_soc
 
-    # schedule_start_time, schedule_end_time = get_scheduled_times()
 
-    schedule_start_time = demo_state.low_price_start
-    schedule_end_time = demo_state.low_price_end
-
-    # TODO refactor to move charging override logic into seperate functions, add to notes
-    # TODO maybe allow scheduled time to be set in demo admin controls
-    # TODO overshoot on override
-
-    dicts_for_df = []
+    demo_state.battery_state.charge_rate
     if charge_is_override:
-        for i in range(RANGE_STEPS):
-            # If rounded time during scheduled time
-            if schedule_start_time <= current_time < schedule_end_time:
-                override = False
-                if soc <= 1:
-                    charging = True
-                else:
-                    charging = False
-                # If not during scheduled time
-            else:
-                # If less than desired soc then overide
-                if soc < desired_soc:
-                    charging = True
-                    override = True
-                else:
-                    charging = False
-                    override = False
+        dicts_for_df = get_override_charge_dicts(
+            soc,
+            current_time,
+            schedule_start_time,
+            schedule_end_time,
+            desired_soc,
+            demo_state.battery_state.charge_rate
+        )
 
-            data_dict = {
-                'Time': current_time,
-                'Battery %': int(soc*100),
-                'Car is Charging': charging,
-                'Charge is Override': override
-            }
-            current_time = add_period_to_rounded_time(current_time, PERIOD)
-            if charging:
-                soc += demo_state.battery_state.charge_rate
-                soc = min(1, soc, desired_soc)
-            dicts_for_df.append(data_dict)
 
     elif car_is_charging and not charge_is_override:
-        override = False
-        for i in range(RANGE_STEPS):
-            if (schedule_start_time <= current_time < schedule_end_time) and (soc <= 1):
-                charging = True
-            else:
-                charging = False
-
-            data_dict = {
-                'Time': current_time,
-                'Battery %': int(soc*100),
-                'Car is Charging': charging,
-                'Charge is Override': override
-            }
-            current_time = add_period_to_rounded_time(current_time, PERIOD)
-            if charging:
-                soc += demo_state.battery_state.charge_rate
-                soc = min(1, soc)
-            dicts_for_df.append(data_dict)
+        dicts_for_df = get_standard_charge_dicts(
+            soc,
+            current_time,
+            schedule_start_time,
+            schedule_end_time,
+            demo_state.battery_state.charge_rate
+        )
 
     elif not car_is_charging:
+        dicts_for_df = []
         for i in range(RANGE_STEPS):
             data_dict = {
                     'Time': current_time,
@@ -107,10 +129,8 @@ def get_future_states(demo_state: DemoAdminState) -> pd.DataFrame:
         raise Exception('Unnacounted for charging scenario')
 
     df = pd.DataFrame(dicts_for_df)
-
     return df
 
-# TODO now position not working, want graph to update x axis range when time changes
 
 def button_control(car_is_plugged_in: bool, soc: float):
     
