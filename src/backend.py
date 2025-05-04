@@ -1,6 +1,3 @@
-# TODO: this file returns dummy data: everything should be replaced by calls to your logic
-# Feel free to implement your logic within this process, or make calls to an external service
-
 import pandas as pd
 import streamlit as st
 from datetime import time
@@ -14,13 +11,13 @@ from utils import (
 
 
 def get_override_charge_dicts(
-        soc,
-        current_time,
-        schedule_start_time,
-        schedule_end_time,
-        desired_soc,
-        charge_rate
-    ):
+        soc: float,
+        current_time: time,
+        schedule_start_time: time,
+        schedule_end_time: time,
+        desired_soc: float,
+        charge_rate: float
+    ) -> list:
     dicts_for_df = []
     for i in range(RANGE_STEPS):
         # If rounded time during scheduled time
@@ -49,17 +46,18 @@ def get_override_charge_dicts(
         current_time = add_period_to_rounded_time(current_time, PERIOD)
         if charging:
             soc += charge_rate
-            soc = min(1, soc, desired_soc)
+            soc = min(1, soc)
         dicts_for_df.append(data_dict)
     return dicts_for_df
 
+
 def get_standard_charge_dicts(
-        soc,
-        current_time,
-        schedule_start_time,
-        schedule_end_time,
-        charge_rate
-    ):
+        soc: float,
+        current_time: time,
+        schedule_start_time: time,
+        schedule_end_time: time,
+        charge_rate: float
+    ) -> list:
     dicts_for_df = []
     override = False
     for i in range(RANGE_STEPS):
@@ -81,8 +79,11 @@ def get_standard_charge_dicts(
         dicts_for_df.append(data_dict)
     return dicts_for_df
 
-def get_future_states(demo_state: DemoAdminState) -> pd.DataFrame:
-    """Return a list of future states for the system. This is used for plotting the charge trajectory."""
+
+def get_plot_df(demo_state: DemoAdminState) -> pd.DataFrame:
+    """
+    Create a dataframe for plotting graph depending on current charging state
+    """
     # Set to new variable to prevent demo state changing during graph plot
     soc = demo_state.battery_state.soc
     current_time = demo_state.current_time
@@ -132,78 +133,84 @@ def get_future_states(demo_state: DemoAdminState) -> pd.DataFrame:
     return df
 
 
-def button_control(car_is_plugged_in: bool, soc: float):
-    
+def not_plugged_in_scenario() -> None:
+    c1, c2 = st.columns([1, 1])
+    scheduled_text = "Plug in to start scheduled charging"
+    override_text = "Plug in to start override"
+    c1.button(scheduled_text, disabled=True, on_click=handle_scheduled_charge)
+    c2.button(override_text, disabled=True, on_click=handle_override_charge)
+
+
+def no_override_no_schedule_scenario() -> None:
+    c1, c2 = st.columns([1, 1])
+    scheduled_text = "Start scheduled charging"
+    override_text = "Start override"
+    c1.button(scheduled_text, disabled=False, on_click=handle_scheduled_charge)
+    c2.button(override_text, disabled=True, on_click=handle_override_charge)
+
+
+def no_override_yes_schedule_scenario(soc: float) -> None:
+    # Two rows and two columns to position override charge above button
+    c1_row1, c2_row1 = st.columns([1, 1])
+    # If we need to get desired percentage chart then add in extra input for this
+    desired_percentage_input = c2_row1.number_input(
+        "Override charge up to %",
+        min_value=int(soc*100),
+        max_value=100,
+        step=1,
+        help="Enter Battery %"
+    )
+    st.session_state['charger_state'].desired_soc = desired_percentage_input / 100.0
+    # Second row
+    c1_row2, c2_row2 = st.columns([1, 1])
+    scheduled_text = "Stop scheduled charging"
+    c1_row2.button(scheduled_text, disabled=False, on_click=handle_scheduled_charge)
+    # Don't want to allow user to click charge if desired soc <= current soc
+    if st.session_state['charger_state'].desired_soc <= soc:
+        override_text = "Select % to start override"
+        c2_row2.button(override_text, disabled=True, on_click=handle_override_charge)
+    else:
+        override_text = "Start override"
+        c2_row2.button(override_text, disabled=False, on_click=handle_override_charge)
+
+
+def yes_override_yes_schedule_scenario() -> None:
+    c1, c2 = st.columns([1, 1])
+    scheduled_text = "Stop scheduled charging"
+    override_text = "Stop override"
+    c1.button(scheduled_text, disabled=True, on_click=handle_scheduled_charge)
+    c2.button(override_text, disabled=False, on_click=handle_override_charge)
+
+
+def button_control(car_is_plugged_in: bool, soc: float) -> None:
+    """
+    Define button controls depending on current state
+    """
     car_is_charging, charge_is_override = get_scheduled_override()
-
     st.subheader("Controls")
-    
-    #TODO split scenarios into functions
-
     # Not plugged in scenario
     if not car_is_plugged_in:
-        c1, c2 = st.columns([1, 1])
-        scheduled_text = "Plug in to start scheduled charging"
-        override_text = "Plug in to start override"
-        c1.button(scheduled_text, disabled=True, on_click=handle_scheduled_charge)
-        c2.button(override_text, disabled=True, on_click=handle_override_charge)
-    
-    
+        not_plugged_in_scenario()
     # Plugged in scenarios
     else:
-
         # No schedule, No override scenario (D from notes)
         if not car_is_charging and not charge_is_override:
-            c1, c2 = st.columns([1, 1])
-            scheduled_text = "Start scheduled charging"
-            override_text = "Start override"
-            c1.button(scheduled_text, disabled=False, on_click=handle_scheduled_charge)
-            c2.button(override_text, disabled=True, on_click=handle_override_charge)
-
-        # TODO need to enter charge percentage before clicking on start overide
-
+            no_override_no_schedule_scenario()
         # Yes schedule, No override scenario (B from notes) 
         elif car_is_charging and not charge_is_override:
-            c1_row1, c2_row1 = st.columns([1, 1])
-            # If we need to get desired percentage chart then add in extra input for this
-            desired_percentage_input = c2_row1.number_input(
-                "Override charge up to %",
-                min_value=int(soc*100),
-                max_value=100,
-                step=1,
-                help="Enter Battery %"
-            )
-            st.session_state['charger_state'].desired_soc = desired_percentage_input / 100.0
-
-            c1_row2, c2_row2 = st.columns([1, 1])
-
-            scheduled_text = "Stop scheduled charging"
-            c1_row2.button(scheduled_text, disabled=False, on_click=handle_scheduled_charge)
-            
-            # Don't want to allow user to click charge if desired soc <= current soc
-            if st.session_state['charger_state'].desired_soc <= soc:
-                override_text = "Select % to start override"
-                c2_row2.button(override_text, disabled=True, on_click=handle_override_charge)
-            else:
-                    override_text = "Start override"
-                    c2_row2.button(override_text, disabled=False, on_click=handle_override_charge)
-            
-
+            no_override_yes_schedule_scenario(soc)
         # Yes schedule, Yes override scenario (A from notes)
         elif car_is_charging and charge_is_override:
-            c1, c2 = st.columns([1, 1])
-            scheduled_text = "Stop scheduled charging"
-            override_text = "Stop override"
-            c1.button(scheduled_text, disabled=True, on_click=handle_scheduled_charge)
-            c2.button(override_text, disabled=False, on_click=handle_override_charge)
-
+            yes_override_yes_schedule_scenario()
         # No schedule, Yes override scenario (C from notes) 
         else:
             raise Exception(f"Schedule: {car_is_charging}, Override: {charge_is_override}.\nThis scenario should not be possible")    
 
 
 def handle_scheduled_charge() -> None:
-    # TODO add docstring
+    """
+    Button with changing content for scheduled charging
+    """
     # Should only affect car_is_charging from charger_state
     car_is_charging, charge_is_override = get_scheduled_override()
     if car_is_charging and not charge_is_override:
@@ -216,8 +223,11 @@ def handle_scheduled_charge() -> None:
     else:
         raise Exception('Invalid scheduled override combo')
 
+
 def handle_override_charge() -> None:
-    # TODO add docstring
+    """
+    Button with changing content for scheduled charging
+    """
     # Should only affect charge_is_override from charger_state
     car_is_charging, charge_is_override = get_scheduled_override()
     if car_is_charging and charge_is_override:

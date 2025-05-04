@@ -65,7 +65,7 @@ def main(demo_state):
 
     # Plot graph
     st.subheader("Charging Schedule")
-    df_plot = backend.get_future_states(demo_state)
+    df_plot = backend.get_plot_df(demo_state)
     st.plotly_chart(
         plot_upcoming_charges(
             df_plot,
