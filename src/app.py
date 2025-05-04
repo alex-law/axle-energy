@@ -1,5 +1,5 @@
 import streamlit as st
-from datetime import timedelta
+from datetime import timedelta, time
 
 import backend
 from config import LOW_PRICE_START_TIME, LOW_PRICE_END_TIME
@@ -11,6 +11,22 @@ from utils import (
     get_scheduled_override,
     add_period_to_rounded_time
 )
+
+
+def set_start_end_low_price() -> tuple[time, time]:
+    """
+    Make default start and end low price times seinsible to encourage
+    always having end time later than start time
+    """
+    if 'low_price_start_limit' in st.session_state:
+        low_price_start_limit = st.session_state['low_price_start_limit']
+    else:
+        low_price_start_limit = LOW_PRICE_START_TIME
+    low_price_start = st.time_input('Low Price Start Time', low_price_start_limit)
+    low_price_end_limit = add_period_to_rounded_time(low_price_start, timedelta(hours=3))
+    low_price_end = st.time_input('Low Price End Time', low_price_end_limit)
+    st.session_state['low_price_start_limit'] = add_period_to_rounded_time(low_price_end_limit, timedelta(hours=21))
+    return low_price_start, low_price_end
 
 
 def get_demo_state() -> DemoAdminState:
@@ -28,23 +44,11 @@ def get_demo_state() -> DemoAdminState:
         )
         soc = percentage_input / 100.0
 
-        # This is used to create the select time drop down
         current_time = st.time_input("Current Time", rounded_time)
-        # When creating st current time, hour and minute aren't automatically
-        # included, so need to add back in from datetime object here
-        # current_time = rounded_time.replace(
-        #     hour=current_time.hour, minute=current_time.minute
-        # )
+        
+        low_price_start, low_price_end = set_start_end_low_price()
 
-        if 'low_price_start_limit' in st.session_state:
-            low_price_start_limit = st.session_state['low_price_start_limit']
-        else:
-            low_price_start_limit = LOW_PRICE_START_TIME
-
-        low_price_start = st.time_input('Low Price Start Time', low_price_start_limit)
-        low_price_end_limit = add_period_to_rounded_time(low_price_start, timedelta(hours=3))
-        low_price_end = st.time_input('Low Price End Time', low_price_end_limit)
-        st.session_state['low_price_start_limit'] = add_period_to_rounded_time(low_price_end_limit, timedelta(hours=21))
+        
 
         car_is_plugged_in = st.toggle("Plugged in", value=True)
 
