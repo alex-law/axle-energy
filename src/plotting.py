@@ -5,6 +5,7 @@ import plotly.express as px
 from plotly.graph_objs import Figure
 
 from models import CombinedState
+from config import PERIOD, PERIOD_STR
 from utils import (
     add_period_to_rounded_time
 )
